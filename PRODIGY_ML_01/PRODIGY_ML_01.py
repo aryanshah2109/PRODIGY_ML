@@ -10,27 +10,43 @@ from sklearn.model_selection import GridSearchCV,train_test_split
 from sklearn.linear_model import LinearRegression,Ridge,ElasticNet
 from sklearn.metrics import r2_score
 import pickle
+import os
+from src.feature_engineering import FeatureEngineering
+
+def evaluate(model,X_val,y_test):
+    y_pred = model.predict(X_val)
+    r2 = r2_score(y_test,y_pred)
+    return r2
 
 # reading data
-data = pd.read_csv(r'D:\Projects\Prodigy-Projects\PRODIGY_ML_01\Data\train.csv')
-X = data.drop('SalePrice',axis=1)
-y = data['SalePrice']
+base = os.path.dirname(os.path.abspath(__file__))
+train_path = os.path.join(base, 'data', 'train.csv')
+test_path = os.path.join(base, 'data', 'test.csv')
 
-# merging related columns
-X['TotalSF'] = X['TotalBsmtSF']+X['1stFlrSF']+X['2ndFlrSF']
-X['Age'] = X['YrSold']-X['YearBuilt']
+train_df = pd.read_csv(train_path)
+test_df = pd.read_csv(test_path)
 
-X=X.drop(['TotalBsmtSF','1stFlrSF','2ndFlrSF','YrSold','YearBuilt'],axis=1)
+y = train_df['SalePrice']
+X = train_df.drop(columns=['Id', 'SalePrice', 'Alley', 'PoolQC', 'Fence', 'Utilities', 'MiscFeature', 'MiscVal'])
+X_test = test_df.drop(columns=['Id', 'Alley', 'PoolQC', 'Fence', 'Utilities', 'MiscFeature', 'MiscVal'])
+
 
 # splitting using train test split
-X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2,random_state=42)
-
-# dropping columns which are not much significant
-X_train = X_train.drop(['Id','Alley','PoolQC','Fence','Utilities','MiscFeature','MiscVal'],axis=1)
-X_test = X_test.drop(['Id','Alley','PoolQC','Fence','Utilities','MiscFeature','MiscVal'],axis=1)
+X_train, X_val, y_train, y_test = train_test_split(X,y,test_size=0.2,random_state=42)
 
 # categories
-numerical_features = X_train.select_dtypes(include=['int64','float64']).columns.to_list()
+numerical_features = [
+    'LotFrontage', 'LotArea', 'OverallQual', 'OverallCond',
+    'MasVnrArea', 'BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF',
+    'LowQualFinSF', 'GrLivArea', 'BsmtFullBath', 'BsmtHalfBath',
+    'FullBath', 'HalfBath', 'BedroomAbvGr', 'KitchenAbvGr',
+    'TotRmsAbvGrd', 'Fireplaces', 'GarageYrBlt', 'GarageCars',
+    'GarageArea', 'WoodDeckSF', 'OpenPorchSF', 'EnclosedPorch',
+    '3SsnPorch', 'ScreenPorch', 'PoolArea',
+    'TotalSF', 'HouseAge'
+]
+
+
 ordinal_features = [
     'LotShape', 'LandSlope', 'ExterQual', 'ExterCond',
     'BsmtQual', 'BsmtCond', 'BsmtExposure',
@@ -96,21 +112,22 @@ preprocessor_pipeline = ColumnTransformer([
 
 # model pipeline
 model_pipeline = Pipeline([
+    ('feature_engineering', FeatureEngineering()),
     ('preprocess',preprocessor_pipeline),
     ('model',Ridge())
 ])
 
-model_pipeline.fit(X_train,y_train)
-
 params={'model__alpha':[0.01,0.05,0.1,0.5,1,10,100,200,300]}
 grid = GridSearchCV(model_pipeline,param_grid=params,scoring='neg_root_mean_squared_error',cv=5)
 grid.fit(X_train,y_train)
-grid.best_params_
 
-y_pred = grid.predict(X_test)
-r2 = r2_score(y_test,y_pred)
-r2
+# saving the model
 
-with open(r'D:\Projects\Prodigy-Projects\PRODIGY_ML_01\house_price_predictor_model.pkl','wb') as f:
-  pickle.dump(grid,f)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODELS_DIR = os.path.join(BASE_DIR, 'models')
+os.makedirs(MODELS_DIR, exist_ok=True)
+
+with open(os.path.join(MODELS_DIR, 'house_price_pipeline.pkl'), 'wb') as f:
+    pickle.dump(grid, f)
+
 
