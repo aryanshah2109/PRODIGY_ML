@@ -20,7 +20,7 @@ Ensure the 'Mall_Customers.csv' file is placed in the 'data' folder.
 
 Usage
 
-Run the script: python prodigy_ml_02 (2).py.
+Run the script: python PRODIGY_ML_02.py.
 The script will:
 Load and preprocess the data.
 Perform K-means clustering with 8 clusters.
