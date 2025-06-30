@@ -34,11 +34,11 @@ HandGesturesIdentification.py      # Main model training and testing script
 
 ## Features
 
-- ✅ Image loading and preprocessing (grayscale, resizing to 64x64)
-- ✅ CNN with 2 Convolutional layers and Dense layers
-- ✅ Train/Test split with performance evaluation
-- ✅ Training and validation accuracy/loss visualization
-- ✅ Predict individual hand gestures with readable labels
+- Image loading and preprocessing (grayscale, resizing to 64x64)
+- CNN with 2 Convolutional layers and Dense layers
+- Train/Test split with performance evaluation
+- Training and validation accuracy/loss visualization
+- Predict individual hand gestures with readable labels
 
 ---
 
